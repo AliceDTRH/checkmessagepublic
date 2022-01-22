@@ -1,21 +1,21 @@
 #!/usr/bin/python
+import asyncio
 import json
+import os
+import sys
+import time
+from os.path import exists
 from pathlib import Path, PosixPath
 from re import sub
 from sys import stderr
-import sys
-import appdirs
-import asyncio
+
 import aiohttp
+import appdirs
 import pickledb
-from os import remove, system
-import os
 import systemd_watchdog
-from os.path import exists
 from asyncinotify import Inotify, Mask
-from loguru import logger
-import time
 from limit import limit
+from loguru import logger
 
 wd = systemd_watchdog.watchdog()
 
@@ -46,7 +46,7 @@ class AlertSystem:
         self._message = str()
         self._urgency = int()
         if exists(Path(statedir+QUIETF)):
-            remove(Path(statedir+QUIETF))
+            os.remove(Path(statedir+QUIETF))
             logger.error("Quiet file existed, removed. Not taking other action.")
         if db.get('alert') == "True":
             self.enable()
@@ -83,14 +83,14 @@ class AlertSystem:
             return
         for _ in range(5):
             if(self.alert):
-                system("/usr/bin/abeep -f 3500 -l 250 -r 2")
+                os.system("/usr/bin/abeep -f 3500 -l 250 -r 2")
         if newnotification:
-            system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
+            os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
                    .format(title=self.title,
                            message=self.message,
                            urgency=self.urgency))
         elif self.alert:
-            system("/usr/bin/abeep -f 3500 -l 250 -r 2")
+            os.system("/usr/bin/abeep -f 3500 -l 250 -r 2")
         
         logger.info("New message: "+self.message)
         with open(statedir+'/messages', 'a+') as f:
@@ -133,7 +133,7 @@ async def check_files() -> None:
             if event.name == PosixPath('.quiet') and event.mask == Mask.CREATE:
                 asys.disable()
                 if exists(Path(statedir+QUIETF)):
-                    remove(Path(statedir+QUIETF))
+                    os.remove(Path(statedir+QUIETF))
                     return
 
 @logger.catch()
