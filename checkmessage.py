@@ -9,6 +9,7 @@ import asyncio
 import aiohttp
 import pickledb
 from os import remove, system
+import os
 import systemd_watchdog
 from os.path import exists
 from asyncinotify import Inotify, Mask
@@ -28,10 +29,11 @@ db.auto_dump = True
 
 if db.exists('since'):
     url = "https://ntfy.sh/{id}/json?since={since}".format(
-        since=db.get('since'),id=)
+        since=db.get('since'),
+        id=os.environ['ID'])
     logger.debug(db.get('since'))
 else:
-    url = "https://ntfy.sh/{id}/json".format(id=)
+    url = "https://ntfy.sh/{id}/json".format(id=os.environ['ID'])
 
 @logger.catch()
 class AlertSystem:
