@@ -19,7 +19,7 @@ from limit import limit
 
 wd = systemd_watchdog.watchdog()
 
-
+QUIETF='/.quiet'
 appname = "CheckMessage"
 appauthor = "AliceDTRH"
 statedir = appdirs.user_state_dir(appname, appauthor)
@@ -33,7 +33,7 @@ if db.exists('since'):
         id=os.environ['ID'])
     logger.debug(db.get('since'))
 else:
-    url = "https://ntfy.sh/{id}/json".format(id=os.environ['ID'])
+    url = "https://ntfy.sh/{id}/json".format(id=os.environ[''])
 
 @logger.catch()
 class AlertSystem:
@@ -43,8 +43,8 @@ class AlertSystem:
     def __init__(self) -> None:
         self._message = str()
         self._urgency = int()
-        if exists(Path(statedir+'/.quiet')):
-            remove(Path(statedir+'/.quiet'))
+        if exists(Path(statedir+QUIETF)):
+            remove(Path(statedir+QUIETF))
             logger.error("Quiet file existed, removed. Not taking other action.")
         if db.get('alert') == "True":
             self.enable()
@@ -123,15 +123,15 @@ async def check_message(session, r):
 
 @logger.catch()
 @limit(1, 30)
-async def checkForFiles() -> None:
+async def check_files() -> None:
     logger.debug("Started file checking.")
     with Inotify() as inotify:
         inotify.add_watch(statedir, Mask.CREATE)
         async for event in inotify:
             if event.name == PosixPath('.quiet') and event.mask == Mask.CREATE:
                 asys.disable()
-                if exists(Path(statedir+'/.quiet')):
-                    remove(Path(statedir+'/.quiet'))
+                if exists(Path(statedir+QUIETF)):
+                    remove(Path(statedir+QUIETF))
                     return
 
 @logger.catch()
@@ -169,7 +169,7 @@ async def main():
                       sock_connect=None, sock_read=80)
         async with session.get(url, timeout=timeout) as r:
             msgs = asyncio.create_task(check_message(session, r))
-            filewatcher = asyncio.create_task(checkForFiles())
+            filewatcher = asyncio.create_task(check_files())
             
             while True:
 
@@ -177,7 +177,7 @@ async def main():
                 
                 if filewatcher.done():
                     logger.warning("Filewatcher died")
-                    filewatcher = asyncio.create_task(checkForFiles())
+                    filewatcher = asyncio.create_task(check_files())
     
                 if msgs.done():
                     logger.info("Messages checked")
@@ -202,4 +202,5 @@ if __name__ == '__main__':
         db.dump()
     except:
         logger.exception("Uncaught exception")
+        raise
         
