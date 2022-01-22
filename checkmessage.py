@@ -19,6 +19,8 @@ from limit import limit
 
 wd = systemd_watchdog.watchdog()
 
+#Trigger pep8speaks
+
 QUIETF='/.quiet'
 appname = "CheckMessage"
 appauthor = "AliceDTRH"
