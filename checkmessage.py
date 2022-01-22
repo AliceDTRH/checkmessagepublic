@@ -33,7 +33,7 @@ if db.exists('since'):
         id=os.environ['ID'])
     logger.debug(db.get('since'))
 else:
-    url = "https://ntfy.sh/{id}/json".format(id=os.environ[''])
+    url = "https://ntfy.sh/{id}/json".format(id=os.environ['ID'])
 
 @logger.catch()
 class AlertSystem:
