@@ -17,6 +17,8 @@ from asyncinotify import Inotify, Mask
 from limit import limit
 from loguru import logger
 
+import subprocess
+
 wd = systemd_watchdog.watchdog()
 
 #Trigger pep8speaks
@@ -28,7 +30,7 @@ statedir = appdirs.user_state_dir(appname, appauthor)
 db = pickledb.load(statedir+'/pickledb.db', False)
 logger.debug("Opening database: "+statedir+'/pickledb.db')
 db.auto_dump = True
-alarmcommand = "/usr/bin/mpv /usr/share/sounds/freedesktop/stereo/dialog-warning.oga --volume=200"
+alarmcommand = ["/usr/bin/mpv", "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga", "--volume=200"]
 
 if db.exists('since'):
     url = "https://ntfy.sh/{id}/json?since={since}".format(
@@ -84,14 +86,15 @@ class AlertSystem:
             return
         for _ in range(5):
             if(self.alert):
-                os.system(alarmcommand)
+                subprocess.run(alarmcommand)
         if newnotification:
-            os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
-                   .format(title=self.title,
-                           message=self.message,
-                           urgency=self.urgency))
+            subprocess.run(["/usr/bin/notify-send", "-u "+self.urgency, "-t 0 "+self.title, self.message]) #Not working
+            #os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
+            #       .format(title=self.title,
+            #               message=self.message,
+            #               urgency=self.urgency))
         elif self.alert:
-            os.system(alarmcommand)
+            subprocess.run(alarmcommand)
         
         logger.info("New message: "+self.message)
         with open(statedir+'/messages', 'a+') as f:
