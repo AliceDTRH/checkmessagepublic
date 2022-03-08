@@ -27,8 +27,8 @@ QUIETF='/.quiet'
 appname = "CheckMessage"
 appauthor = "AliceDTRH"
 statedir = appdirs.user_state_dir(appname, appauthor)
-db = pickledb.load(statedir+'/pickledb.db', False)
-logger.debug("Opening database: "+statedir+'/pickledb.db')
+db = pickledb.load(f'{statedir}/pickledb.db', False)
+logger.debug(f"Opening database: {statedir}/pickledb.db")
 db.auto_dump = True
 alarmcommand = ["/usr/bin/mpv", "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga", "--volume=200"]
 
@@ -88,16 +88,24 @@ class AlertSystem:
             if(self.alert):
                 subprocess.run(alarmcommand)
         if newnotification:
-            subprocess.run(["/usr/bin/notify-send", "-u "+self.urgency, "-t 0 "+self.title, self.message]) #Not working
-            #os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
-            #       .format(title=self.title,
-            #               message=self.message,
-            #               urgency=self.urgency))
+            subprocess.run(
+                [
+                    "/usr/bin/notify-send",
+                    f"-u {self.urgency}",
+                    "-t 0 " + self.title,
+                    self.message,
+                ]
+            )
+
+                #os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
+                #       .format(title=self.title,
+                #               message=self.message,
+                #               urgency=self.urgency))
         elif self.alert:
             subprocess.run(alarmcommand)
-        
-        logger.info("New message: "+self.message)
-        with open(statedir+'/messages', 'a+') as f:
+
+        logger.info(f"New message: {self.message}")
+        with open(f'{statedir}/messages', 'a+') as f:
             f.write(self._message + '\n')
 
     def prepare_state_folder(self) -> None:
@@ -176,25 +184,25 @@ async def main():
         async with session.get(url, timeout=timeout) as r:
             msgs = asyncio.create_task(check_message(session, r))
             filewatcher = asyncio.create_task(check_files())
-            
+
             while True:
 
                 await asyncio.wait([msgs, filewatcher], return_when=asyncio.FIRST_COMPLETED)
-                
+
                 if filewatcher.done():
                     logger.warning("Filewatcher died")
                     filewatcher = asyncio.create_task(check_files())
-    
+
                 if msgs.done():
                     logger.info("Messages checked")
                     logger.debug(msgs)
-                    logger.debug("Cancelled? "+str(msgs.cancelled()))
+                    logger.debug(f"Cancelled? {str(msgs.cancelled())}")
                     try:
                       await handle_messages(msgs.result())
                     except aiohttp.client_exceptions.ServerTimeoutError:
                       logger.exception("Server timed out.")
                     msgs = asyncio.create_task(check_message(session, r))
-    
+
                 if asys.alert:
                     asys.run_alert()
                 #await asyncio.sleep(1)
