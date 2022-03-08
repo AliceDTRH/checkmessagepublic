@@ -92,15 +92,16 @@ class AlertSystem:
                 [
                     "/usr/bin/notify-send",
                     f"-u {self.urgency}",
-                    "-t 0 " + self.title,
+                    f"-t 0 {self.title}",
                     self.message,
                 ]
             )
 
-                #os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
-                #       .format(title=self.title,
-                #               message=self.message,
-                #               urgency=self.urgency))
+
+                    #os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
+                    #       .format(title=self.title,
+                    #               message=self.message,
+                    #               urgency=self.urgency))
         elif self.alert:
             subprocess.run(alarmcommand)
 
