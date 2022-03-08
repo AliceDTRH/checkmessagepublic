@@ -88,6 +88,7 @@ class AlertSystem:
             if(self.alert):
                 subprocess.run(alarmcommand)
         if newnotification:
+            # Not working:
             subprocess.run(
                 [
                     "/usr/bin/notify-send",
@@ -95,13 +96,7 @@ class AlertSystem:
                     f"-t 0 {self.title}",
                     self.message,
                 ]
-            )
-
-
-                    #os.system('/usr/bin/notify-send -u {urgency} -t 0 "{title}" "{message}"'
-                    #       .format(title=self.title,
-                    #               message=self.message,
-                    #               urgency=self.urgency))
+            ) 
         elif self.alert:
             subprocess.run(alarmcommand)
 
